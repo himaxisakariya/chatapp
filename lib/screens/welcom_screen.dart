@@ -91,6 +91,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
                 child: Hero(
                   tag: "button2",
+
                   child: TabButton(
                     btnColor: PalletteColors.lightBlue,
                     btnTxtColor: Colors.black,

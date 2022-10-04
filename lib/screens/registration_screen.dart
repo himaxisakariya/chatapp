@@ -81,6 +81,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: passInput(),
               ),
               SizedBox(
+
                 height: 18.0,
               ),
               Padding(

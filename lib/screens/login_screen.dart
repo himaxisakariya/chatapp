@@ -253,6 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(40),
             borderSide: BorderSide(
               color: Colors.grey.shade300,
+
             ),
           ),
           errorStyle: TextStyle(fontSize: 14),

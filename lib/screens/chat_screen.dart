@@ -268,6 +268,7 @@ class MessageBubble extends StatelessWidget {
   final String? sender;
   final String? text;
   final Timestamp? timestamp;
+
   final bool? isMe;
 
   @override

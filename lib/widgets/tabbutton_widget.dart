@@ -24,6 +24,7 @@ class TabButton extends StatelessWidget {
         onPressed: btnFunction as void Function()?,
         minWidth: 200.0,
         height: 42.0,
+
         child: Text(
           btnText,
           style: TextStyle(fontSize: 17.0, color: btnTxtColor),
