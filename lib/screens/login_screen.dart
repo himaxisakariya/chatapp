@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:page_transition/page_transition.dart';
-import '../components/colors.dart';
+import 'package:loction/components/colors.dart';
 import '../widgets/tabbutton_widget.dart';
 import 'chat_screen.dart';
 
@@ -13,11 +12,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // bool showSpinner = false;
   late String password;
   late String email;
-
-  // final _firestore = Firestore.
   final _auth = FirebaseAuth.instance;
   bool _obscureText = true;
   bool _validate = false;
@@ -28,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _text1.dispose();
     _text2.dispose();
-    // _text3.dispose();
     super.dispose();
   }
 
@@ -41,12 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('images/background.jpg'),
-          fit: BoxFit.cover,
-        ),
-      ),
       constraints: BoxConstraints.expand(),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -67,19 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
         body: SafeArea(
           child: ListView(
             children: <Widget>[
-              SizedBox(
-                height: 70.0,
-              ),
-              Hero(
-                tag: 'logo',
-                child: Container(
-                  height: 100.0,
-                  child: Image.asset('images/logo.png'),
-                ),
-              ),
-              SizedBox(
-                height: 48.0,
-              ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
                 child: emailInput(),
@@ -99,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Hero(
                   tag: "button2",
                   child: TabButton(
-                    btnColor: PalletteColors.primaryRed,
+                    btnColor: FixColors.primaryTeal,
                     btnTxtColor: Colors.white,
                     btnText: "Log In",
                     btnFunction: () async {
@@ -129,37 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                 ),
-              ),
-              SizedBox(
-                height: 10.0,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account ?",
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      color: Colors.white,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          PageTransition(
-                              type: PageTransitionType.fade,
-                              child: LoginScreen()));
-                    },
-                    child: Text(
-                      " Sign Up",
-                      style: TextStyle(
-                        fontSize: 15.0,
-                        color: PalletteColors.primaryRed,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -206,13 +151,13 @@ class _LoginScreenState extends State<LoginScreen> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(40),
               borderSide: BorderSide(
-                color: Colors.red,
+                color: Colors.grey.shade300,
               )),
         ),
         textInputAction: TextInputAction.next,
       ),
       data: Theme.of(context).copyWith(
-        accentColor: PalletteColors.primaryRed,
+        accentColor: FixColors.primaryTeal,
       ),
     );
   }
@@ -220,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget passInput() {
     return Theme(
       data: Theme.of(context).copyWith(
-        accentColor: PalletteColors.primaryRed,
+        accentColor: FixColors.primaryTeal,
       ),
       child: TextField(
         onChanged: (value) {
@@ -247,20 +192,19 @@ class _LoginScreenState extends State<LoginScreen> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(40),
               borderSide: BorderSide(
-                color: Colors.red,
+                color: Colors.grey.shade300,
               )),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(40),
             borderSide: BorderSide(
               color: Colors.grey.shade300,
-
             ),
           ),
           errorStyle: TextStyle(fontSize: 14),
           suffixIcon: IconButton(
             icon: Icon(
               _obscureText ? Icons.visibility : Icons.visibility_off,
-              color: PalletteColors.primaryGrey,
+              color: FixColors.primaryGrey,
             ),
             onPressed: _toggle,
           ),

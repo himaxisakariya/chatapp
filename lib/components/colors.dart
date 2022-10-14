@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-class PalletteColors{
-  static get primaryRed => Colors.teal;
-  static get lightSkin => Color(0xffF4DED6);
-  static get lightBlue => Color(0xffC8D5EB);
-  static get primaryGrey => Color(0xff3A4255);
-  static get g1 => Color(0xffFD5D5D);
-  static get g2 => Color(0xffFCCF31);}
+
+class FixColors {
+  static get primaryTeal => Colors.teal;
+
+  static get lightBlue => Colors.grey;
+
+  static get primaryGrey => Colors.black26;
+}

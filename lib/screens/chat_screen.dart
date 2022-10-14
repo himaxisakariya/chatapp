@@ -1,13 +1,16 @@
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
+import 'package:loction/classmodel/chat_model.dart';
 import 'package:loction/components/colors.dart';
-import 'package:loction/components/contants.dart';
+import 'package:loction/screens/welcome_screen.dart';
+import 'package:sticky_grouped_list/sticky_grouped_list.dart';
 
 final _firestore = FirebaseFirestore.instance;
 User? loggedInuser;
@@ -21,48 +24,18 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final controller = TextEditingController();
+  final sendmessage = TextEditingController();
   final _auth = FirebaseAuth.instance;
-  bool isEmojiVisible = false;
-  bool isKeyboardVisible = false;
   var messageText;
+  final ImagePicker _picker = ImagePicker();
+  String? imageurl;
+  final storageRef = FirebaseStorage.instance;
+  bool i = true;
 
   @override
   void initState() {
     super.initState();
     getCurrentUser();
-    var keyboardVisibilityController = KeyboardVisibilityController();
-    keyboardVisibilityController.onChange.listen((bool isKeyboardVisible) {
-      setState(() {
-        this.isKeyboardVisible = isKeyboardVisible;
-      });
-
-      if (isKeyboardVisible && isEmojiVisible) {
-        setState(() {
-          isEmojiVisible = false;
-        });
-      }
-    });
-  }
-
-  Future toggleEmojiKeyboard() async {
-    if (isKeyboardVisible) {
-      FocusScope.of(context).unfocus();
-    }
-
-    setState(() {
-      isEmojiVisible = !isEmojiVisible;
-    });
-  }
-
-  Future<bool> onBackPress() {
-    if (isEmojiVisible) {
-      toggleEmojiKeyboard();
-    } else {
-      Navigator.pop(context);
-    }
-
-    return Future.value(false);
   }
 
   @override
@@ -84,19 +57,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void onEmojiSelected(String emoji) => setState(() {
-    controller.text = controller.text + emoji;
-  });
+        sendmessage.text = sendmessage.text + emoji;
+      });
 
   @override
   Widget build(BuildContext context) {
-    Widget buildSticker() {
-      return EmojiPicker(
-        onEmojiSelected: (emoji, category) {
-          onEmojiSelected(category.emoji);
-        },
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -110,42 +75,140 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: Icon(Icons.exit_to_app),
               onPressed: () {
                 _auth.signOut();
-                Navigator.pop(context);
+                Navigator.pushReplacement(context, MaterialPageRoute(
+                  builder: (context) {
+                    return WelcomeScreen();
+                  },
+                ));
               }),
         ],
         title: Text('Messages'),
-        backgroundColor: PalletteColors.primaryRed,
+        backgroundColor: FixColors.primaryTeal,
       ),
       body: SafeArea(
         child: WillPopScope(
-          onWillPop: onBackPress,
+          onWillPop: () async {
+            bool willLeave = false;
+            await showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                      title: const Text('Exit'),
+                      content: const Text("Are you sure You want to Exit?"),
+                      actions: [
+                        TextButton(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.teal)),
+                            onPressed: () {
+                              willLeave = true;
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text(
+                              'Yes',
+                              style: TextStyle(color: Colors.white),
+                            )),
+                        TextButton(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.teal)),
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text(
+                              'No',
+                              style: TextStyle(color: Colors.white),
+                            ))
+                      ],
+                    ));
+            return willLeave;
+          },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              MessagesStream(),
+              demo(),
               Container(
                 width: double.infinity,
                 height: 50.0,
-                decoration: new BoxDecoration(
-                    border: new Border(
-                        top:
-                        new BorderSide(color: Colors.blueGrey, width: 0.5)),
-                    color: Colors.white),
+                decoration:
+                    BoxDecoration(border: Border.all(color: Colors.black38)),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Material(
                       child: new Container(
-                        margin: new EdgeInsets.symmetric(horizontal: 1.0),
-                        child: new IconButton(
-                          icon: new Icon(isEmojiVisible
-                              ? Icons.keyboard_rounded
-                              : Icons.emoji_emotions),
-                          onPressed: onClickedEmoji,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
+                          margin: new EdgeInsets.symmetric(horizontal: 4.0),
+                          child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  i = !i;
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text("Image"),
+                                      content: Text("Select Image"),
+                                      actions: [
+                                        IconButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+                                              final XFile? image =
+                                                  await _picker.pickImage(
+                                                      source:
+                                                          ImageSource.camera);
+                                              File file = File(image!.path);
+                                              if (image != null) {
+                                                var snapshot = await storageRef
+                                                    .ref()
+                                                    .child(
+                                                        'images/${image.name}')
+                                                    .putFile(file);
+                                                var downloadUrl = await snapshot
+                                                    .ref
+                                                    .getDownloadURL();
+                                                setState(() {
+                                                  imageurl = downloadUrl;
+                                                });
+                                                print(imageurl);
+                                                if (downloadUrl == null) {
+                                                  CircularProgressIndicator();
+                                                }
+                                              }
+                                            },
+                                            icon: Icon(Icons.camera_alt)),
+                                        IconButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+                                              final XFile? image =
+                                                  await _picker.pickImage(
+                                                      source:
+                                                          ImageSource.gallery);
+                                              var file = File(image!.path);
+                                              if (image != null) {
+                                                var snapshot = await storageRef
+                                                    .ref()
+                                                    .child(
+                                                        'images/${image.name}')
+                                                    .putFile(file);
+                                                var downloadUrl = await snapshot
+                                                    .ref
+                                                    .getDownloadURL();
+                                                setState(() {
+                                                  imageurl = downloadUrl;
+                                                });
+                                                print(imageurl);
+                                                if (downloadUrl == null) {
+                                                  CircularProgressIndicator();
+                                                }
+                                              }
+                                            },
+                                            icon: Icon(Icons
+                                                .photo_size_select_actual_outlined))
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              icon: Icon(Icons.image))),
                       color: Colors.white,
                     ),
                     Flexible(
@@ -155,21 +218,27 @@ class _ChatScreenState extends State<ChatScreen> {
                           keyboardType: TextInputType.multiline,
                           focusNode: focusNode,
                           onSubmitted: (value) {
-                            controller.clear();
+                            sendmessage.clear();
                             _firestore.collection('messages').add({
                               'sender': loggedInuser!.email,
                               'text': messageText,
+                              'type': imageurl,
                               'timestamp': Timestamp.now(),
                             });
                           },
-                          maxLines: null,
-                          controller: controller,
+                          controller: sendmessage,
                           onChanged: (value) {
-                            messageText = value;
+                            if (imageurl != null) {
+                              imageurl = value;
+                            } else {
+                              messageText = value;
+                            }
                           },
                           style:
-                          TextStyle(color: Colors.blueGrey, fontSize: 15.0),
-                          decoration: kMessageTextFieldDecoration,
+                              TextStyle(color: Colors.blueGrey, fontSize: 15.0),
+                          decoration: InputDecoration(
+                              hintText: "Type Something....",
+                              hintStyle: TextStyle(color: Colors.blueGrey)),
                         ),
                       ),
                     ),
@@ -179,10 +248,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: new IconButton(
                           icon: new Icon(Icons.send),
                           onPressed: () {
-                            controller.clear();
+                            sendmessage.clear();
                             _firestore.collection('messages').add({
                               'sender': loggedInuser!.email,
                               'text': messageText,
+                              'type': imageurl,
                               'timestamp': Timestamp.now(),
                             });
                           },
@@ -194,143 +264,176 @@ class _ChatScreenState extends State<ChatScreen> {
                   ],
                 ),
               ),
-              (isEmojiVisible ? buildSticker() : Container()),
             ],
           ),
         ),
       ),
     );
   }
-
-  void onClickedEmoji() async {
-    if (isEmojiVisible) {
-      focusNode.requestFocus();
-    } else if (isKeyboardVisible) {
-      await SystemChannels.textInput.invokeMethod('TextInput.hide');
-      await Future.delayed(Duration(milliseconds: 100));
-    }
-    toggleEmojiKeyboard();
-  }
 }
 
-String giveUsername(String email) {
-  return email.replaceAll(new RegExp(r'@g(oogle)?mail\.com$'), '');
-}
-
-class MessagesStream extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('messages')
-      // Sort the messages by timestamp DESC because we want the newest messages on bottom.
-          .orderBy("timestamp", descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        // If we do not have data yet, show a progress indicator.
-        if (!snapshot.hasData) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        // Create the list of message widgets.
-
-        // final messages = snapshot.data.documents.reversed;
-
-        List<Widget> messageWidgets = snapshot.data!.docs.map<Widget>((m) {
-          final data = m.data as dynamic;
-          final messageText = data['text'];
-          final messageSender = data['sender'];
-          final currentUser = loggedInuser!.email;
-          final timeStamp = data['timestamp'];
-          return MessageBubble(
-            sender: messageSender,
-            text: messageText,
-            timestamp: timeStamp,
-            isMe: currentUser == messageSender,
-          );
-        }).toList();
-
-        return Expanded(
-          child: ListView(
-            reverse: true,
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-            children: messageWidgets,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  MessageBubble({this.sender, this.text, this.timestamp, this.isMe});
-  final String? sender;
-  final String? text;
-  final Timestamp? timestamp;
-
-  final bool? isMe;
+class demo extends StatefulWidget {
+  const demo({Key? key}) : super(key: key);
 
   @override
+  State<demo> createState() => _demoState();
+}
+
+class _demoState extends State<demo> {
+  @override
   Widget build(BuildContext context) {
-    final dateTime =
-    DateTime.fromMillisecondsSinceEpoch(timestamp!.seconds * 1000);
-    return Padding(
-      padding: EdgeInsets.all(10.0),
-      child: Column(
-        crossAxisAlignment:
-        isMe! ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            "${giveUsername(sender!)}",
-            style: TextStyle(fontSize: 12.0, color: Colors.black54),
-          ),
-          Material(
-            borderRadius: isMe!
-                ? BorderRadius.only(
-              bottomLeft: Radius.circular(30.0),
-              topLeft: Radius.circular(30.0),
-              bottomRight: Radius.circular(30.0),
-            )
-                : BorderRadius.only(
-              bottomLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-              bottomRight: Radius.circular(30.0),
-            ),
-            elevation: 5.0,
-            color:
-            isMe! ? PalletteColors.primaryGrey : PalletteColors.lightBlue,
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              child: Column(
-                crossAxisAlignment:
-                isMe! ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    text!,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      color: isMe! ? Colors.white : Colors.black54,
+    List<UserModal> elements = <UserModal>[];
+    return SingleChildScrollView(
+      child: StreamBuilder(
+        stream: _firestore
+            .collection('messages')
+            .orderBy("timestamp", descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: Text(''));
+          } else if (snapshot.hasData) {
+           // final user = snapshot.data!;
+           //  UserModal userModal =
+           //      UserModal.fromJson(snapshot.data as Map<String, dynamic>);
+            UserModal userModal =
+            snapshot.data!.docs as UserModal;
+            return StickyGroupedListView<UserModal, DateTime>(
+              elements: elements,
+              order: StickyGroupedListOrder.DESC,
+              groupBy: (UserModal userModal) => DateTime(userModal.timestamp!.year,
+                  userModal.timestamp!.month, userModal.timestamp!.day),
+              groupSeparatorBuilder: (UserModal element) {
+                return SizedBox(
+                    height: 50,
+                    child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                            width: 120,
+                            decoration: BoxDecoration(
+                              color: Colors.teal,
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(20.0)),
+                            ),
+                            child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                    '${userModal.timestamp!.day} / ${userModal.timestamp!.month} / ${userModal.timestamp!.year}',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold))))));
+              },
+              floatingHeader: true,
+              itemBuilder: (context, userModal) {
+                return Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: userModal.isMe!
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          "${userModal.sender}",
+                          style:
+                              TextStyle(fontSize: 12.0, color: Colors.black54),
+                        ),
+                        Material(
+                            borderRadius: BorderRadius.circular(20),
+                            elevation: 5.0,
+                            color: userModal.isMe!
+                                ? FixColors.primaryGrey
+                                : FixColors.lightBlue,
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 10.0, horizontal: 20.0),
+                                child: Column(
+                                    crossAxisAlignment: userModal.isMe!
+                                        ? CrossAxisAlignment.end
+                                        : CrossAxisAlignment.start,
+                                    children: [
+                                      if (userModal.type == null)
+                                        Text(
+                                          userModal.text!,
+                                          style: TextStyle(
+                                            fontSize: 18.0,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      if (userModal.type != null)
+                                        Container(
+                                          height: 200,
+                                          width: 200,
+                                          child: CachedNetworkImage(
+                                            imageUrl: "${userModal.type}",
+                                            fit: BoxFit.fill,
+                                            placeholder: (context, url) =>
+                                                CircularProgressIndicator(),
+                                            errorWidget: (context, url, error) {
+                                              return Container(
+                                                height: 0,
+                                                width: 0,
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 6.0),
+                                        // child: Text(
+                                        //   DateFormat('h:mm a').format(element.timestamp),
+                                        //   style: TextStyle(
+                                        //     fontSize: 9.0,
+                                        //     color: Colors.black54,
+                                        //   ),
+                                        // ),
+                                      )
+                                    ])))
+                      ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6.0),
-                    child: Text(
-                      "${DateFormat('h:mm a').format(dateTime)}",
-                      style: TextStyle(
-                        fontSize: 9.0,
-                        color: isMe!
-                            ? Colors.white.withOpacity(0.5)
-                            : Colors.black54.withOpacity(0.5),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+                );
+              },
+              itemComparator: (element1, element2) =>
+                  element1.timestamp!.compareTo(element2.timestamp!),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
       ),
     );
   }
 }
+// Widget buildMessages() {
+//   return Flexible(
+//     child: StreamBuilder(
+//       stream: _firestore
+//           .collection('messages')
+//           .orderBy("timestamp", descending: true)
+//           .snapshots(),
+//       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+//         if (snapshot.hasData) {
+//           UserModal userModal =
+//               snapshot.data!.docs as UserModal;
+//           return ListView.builder(
+//             padding: const EdgeInsets.all(10.0),
+//             itemBuilder: (BuildContext context, int index) =>
+//                 buildItem(index, snapshot.data.documents[index]),
+//             itemCount: snapshot.data.documents.length,
+//             reverse: true,
+//             controller: listScrollController,
+//           );
+//         } else {
+//           return Container();
+//         }
+//       },
+//     ),
+//   );
+// }
+
+

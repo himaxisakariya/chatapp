@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:loction/components/colors.dart';
 import 'package:loction/screens/login_screen.dart';
 import 'package:loction/screens/registration_screen.dart';
-import 'package:loction/widgets/tabbutton_widget.dart';
+import '../widgets/tabbutton_widget.dart';
 
 class WelcomeScreen extends StatefulWidget {
   static String id = 'welcome_screen';
@@ -15,7 +15,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation animationcurve;
-  bool s = true;
 
   @override
   void initState() {
@@ -45,25 +44,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          centerTitle: s,
-          title: Text("Chat app"),
-          backgroundColor: Colors.teal),
-      backgroundColor: Colors.black26,
+        backgroundColor: Colors.teal,
+        centerTitle: true,
+        title: Text(
+          "Chat App",
+          style: TextStyle(fontSize: 35),
+        ),
+      ),
+      backgroundColor: Colors.black,
       body: Container(
         constraints: BoxConstraints.expand(),
         child: SafeArea(
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.fromLTRB(10, 170, 10, 10),
+                padding: const EdgeInsets.only(left: 50, right: 70, top: 70),
                 child: Text(
-                  "Let's Get Start",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 50.0,
-                      fontWeight: FontWeight.w900),
+                  "Let's start..",
+                  style:
+                      TextStyle(color: Colors.white, fontSize: 45, height: 1.5),
                 ),
               ),
               SizedBox(
@@ -74,15 +74,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 child: Hero(
                   tag: "button",
                   child: TabButton(
-                    btnColor: PalletteColors.primaryRed,
+                    btnColor: FixColors.primaryTeal,
                     btnTxtColor: Colors.white,
                     btnText: "Create new account",
                     btnFunction: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegistrationScreen(),
-                          ));
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) {
+                          return RegistrationScreen();
+                        },
+                      ));
                     },
                   ),
                 ),
@@ -91,18 +91,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
                 child: Hero(
                   tag: "button2",
-
                   child: TabButton(
-                    btnColor: PalletteColors.lightBlue,
+                    btnColor: FixColors.lightBlue,
                     btnTxtColor: Colors.black,
                     btnText: "Login with email",
                     btnFunction: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LoginScreen(),
-                          )
-                      );
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) {
+                          return LoginScreen();
+                        },
+                      ));
                     },
                   ),
                 ),

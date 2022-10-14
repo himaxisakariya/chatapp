@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:loction/components/colors.dart';
-import 'package:page_transition/page_transition.dart';
 import '../widgets/tabbutton_widget.dart';
 import 'login_screen.dart';
 import 'chat_screen.dart';
@@ -8,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class RegistrationScreen extends StatefulWidget {
   static String id = 'registration_screen';
+
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
 }
@@ -81,7 +81,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: passInput(),
               ),
               SizedBox(
-
                 height: 18.0,
               ),
               Padding(
@@ -91,11 +90,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   child: TabButton(
                     btnText: "Sign up",
                     btnTxtColor: Colors.white,
-                    btnColor: PalletteColors.primaryRed,
+                    btnColor: FixColors.primaryTeal,
                     btnFunction: () async {
                       (_text1.text.isEmpty ||
-                          _text2.text.isEmpty ||
-                          _text3.text.isEmpty)
+                              _text2.text.isEmpty ||
+                              _text3.text.isEmpty)
                           ? _validate = true
                           : _validate = false;
                       setState(() {
@@ -103,8 +102,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       });
                       try {
                         final newUser =
-                        await _auth.createUserWithEmailAndPassword(
-                            email: email, password: password);
+                            await _auth.createUserWithEmailAndPassword(
+                                email: email, password: password);
                         if (newUser != null) {
                           Navigator.pushNamed(context, ChatScreen.id);
                           setState(() {
@@ -133,24 +132,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                          context,
-                          PageTransition(
-                              type: PageTransitionType.fade,
-                              child: LoginScreen()));
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) {
+                          return LoginScreen();
+                        },
+                      ));
                     },
                     child: Text(
                       " Log In",
                       style: TextStyle(
                         fontSize: 15.0,
-                        color: PalletteColors.primaryRed,
+                        color: FixColors.primaryTeal,
                       ),
                     ),
                   ),
                 ],
-              ),
-              SizedBox(
-                height: 14.0,
               ),
             ],
           ),
@@ -185,7 +181,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(40),
               borderSide: BorderSide(
-                color: Colors.red,
+                color: Colors.grey.shade300,
               )),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(40),
@@ -198,7 +194,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         textInputAction: TextInputAction.next,
       ),
       data: Theme.of(context).copyWith(
-        accentColor: PalletteColors.primaryRed,
+        accentColor: FixColors.primaryTeal,
       ),
     );
   }
@@ -229,7 +225,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(40),
               borderSide: BorderSide(
-                color: Colors.red,
+                color: Colors.grey.shade300,
               )),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(40),
@@ -242,7 +238,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         textInputAction: TextInputAction.next,
       ),
       data: Theme.of(context).copyWith(
-        accentColor: PalletteColors.primaryRed,
+        accentColor: FixColors.primaryTeal,
       ),
     );
   }
@@ -250,7 +246,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget passInput() {
     return Theme(
       data: Theme.of(context).copyWith(
-        accentColor: PalletteColors.primaryRed,
+        accentColor: FixColors.primaryTeal,
       ),
       child: TextField(
         onChanged: (value) {
@@ -278,12 +274,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(40),
               borderSide: BorderSide(
-                color: Colors.red,
+                color: Colors.grey.shade300,
               )),
           suffixIcon: IconButton(
             icon: Icon(
               _obscureText ? Icons.visibility : Icons.visibility_off,
-              color: PalletteColors.primaryGrey,
+              color: FixColors.primaryGrey,
             ),
             onPressed: _toggle,
           ),
